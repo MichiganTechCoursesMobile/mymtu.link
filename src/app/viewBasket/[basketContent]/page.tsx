@@ -1,40 +1,50 @@
+"use client";
+import useSWR from "swr";
+import { notFound } from "next/navigation";
+
 // Example basket content: MTUANDROID:SEMESTER=SPRING-2024&CRNS=12345,67890&BASKET_NAME=Gabagool&NAME=
-
-import { cache, useEffect, useState } from "react";
-import { NextResponse } from "next/server";
-import { unstable_cache } from "next/cache";
-
-export default async function Page({
+export default function Page({
   params,
 }: {
   params: { basketContent: string };
 }) {
   let basketMap = new Map();
-  let basket = decodeURIComponent(params?.basketContent);
-  if (!basket.startsWith("MTUANDROID:")) {
-    basket = atob(basket);
+  let request = decodeURIComponent(params?.basketContent);
+  // If the request does not start with MTUANDROID:, assume its base64 encoded, and decode it.
+  if (!request.startsWith("MTUANDROID:")) {
+    request = atob(request);
   }
-  if (basket.startsWith("MTUANDROID:")) {
-    basket = basket.substring(11);
-    basket.split("&").forEach((pair) => {
+  if (request.startsWith("MTUANDROID:")) {
+    request = request.substring(11);
+    request.split("&").forEach((pair) => {
       const [key, value] = pair.split("=");
       basketMap.set(key, value);
     });
   } else {
-    console.log("Invalid basket");
-    return 404;
+    return notFound();
   }
+
+  // From this point on, we have already verified that the request is valid.
+
+  const fetcher = (url: string | Request | URL) =>
+    fetch(url).then((r) => r.json());
+
   const semester = basketMap.get("SEMESTER").split("-")[0];
   const semesterYear = basketMap.get("SEMESTER").split("-")[1];
+  const crns = basketMap.get("CRNS");
 
-  const crns = basketMap.get("CRNS").split(",");
-
-  const getSectionData = `https://api.michigantechcourses.com/sections?semester=${semester}&year=${semesterYear}`;
-
-  const getSections = unstable_cache(async () =>
-    (await fetch(getSectionData)).json()
+  const { data, error, isLoading } = useSWR(
+    `/api/getSections?semester=${semester}&year=${semesterYear}&sections=${crns}`,
+    fetcher
   );
-  let data = await await getSections();
 
-  return <p>{}</p>;
+  if (error) {
+    return <div>Something went wrong</div>;
+  }
+
+  if (!isLoading) {
+    return <>{JSON.stringify(data)}</>;
+  } else {
+    return <div>Loading...</div>;
+  }
 }
