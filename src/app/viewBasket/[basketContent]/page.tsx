@@ -35,7 +35,6 @@ export default async function Page({
     (await fetch(getSectionData)).json()
   );
   let data = await await getSections();
-  // console.log(data);
 
   return <p>{}</p>;
 }
