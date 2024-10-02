@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   const getSectionData = `https://api.michigantechcourses.com/sections?semester=${semester}&year=${semesterYear}`;
   const getSections = unstable_cache(
     async () => (await fetch(getSectionData)).json(),
-    [`Semester = ${semester} Year = ${semesterYear}`],
+    ["Sections", `Semester = ${semester} Year = ${semesterYear}`],
     { revalidate: 900 }
   );
   let data = await getSections();
