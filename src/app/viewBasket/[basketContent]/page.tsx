@@ -73,13 +73,37 @@ export default function Page({
     return <div>Something went wrong</div>;
   }
 
+  var sharerName = "Someone"; //Default sharer name
+
+  if (basketMap.get("NAME") != "") {
+    sharerName = basketMap.get("NAME");
+  }
+
   if (!isLoading && !courseIsLoading && !error && !courseError) {
     return (
-      <div>
-        {crns.split(",").map((crn: string) => (
-          <div key={crn}>{JSON.stringify(sectionMap.get(crn))}</div>
-        ))}
-      </div>
+      <>
+        <h2 className="text-4xl font-extrabold dark:text-white p-8">
+          <span className="text-primary">{sharerName}</span> shared a basket
+          with you!
+        </h2>
+        <div className="px-7">
+          <div className="card bg-base-200 text-neutral-content w-1/2">
+            <div className="card-body">
+              <h2 className="card-title pb-2 font-extrabold">
+                {basketMap.get("BASKET_NAME")}
+              </h2>
+              {crns.split(",").map((crn: string) => (
+                <div className="card bg-base-300 text-neutral-content w-full">
+                  <div className="card-body">
+                    <h2 className="card-title">{crn}</h2>
+                    <p>{sectionMap.get(crn)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </>
     );
   } else {
     return <div>Loading...</div>;
