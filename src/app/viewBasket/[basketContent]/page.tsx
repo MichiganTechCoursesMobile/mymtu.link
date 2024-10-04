@@ -1,5 +1,6 @@
 "use client";
 import useSWR from "swr";
+import { AnimatePresence, motion } from "framer-motion";
 import { notFound } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -33,6 +34,8 @@ export default function Page({
   const [sectionMap, setSectionMap] = useState<Map<string, any>>(new Map());
   const [courseMap, setCourseMap] = useState<Map<string, any>>(new Map());
   const [courseIds, setCourseIds] = useState<string[]>([]);
+
+  const [selectedSection, setSelectedSection] = useState<string | null>(null);
 
   const semester = basketMap.get("SEMESTER").split("-")[0];
   const semesterYear = basketMap.get("SEMESTER").split("-")[1];
@@ -82,6 +85,31 @@ export default function Page({
   if (!isLoading && !courseIsLoading && !error && !courseError) {
     return (
       <>
+        <AnimatePresence>
+          <input type="checkbox" id="section_modal" className="modal-toggle" />
+        </AnimatePresence>
+        <AnimatePresence>
+          {selectedSection && (
+            <motion.div className="modal" role="dialog">
+              <motion.div
+                layoutId={selectedSection}
+                className="card bg-base-300 text-neutral-content w-1/2 justify-self-center"
+              >
+                <motion.div className="card-body">
+                  <motion.h2 className="card-title">
+                    {selectedSection}
+                  </motion.h2>
+                  <motion.p>{sectionMap.get(selectedSection).section}</motion.p>
+                </motion.div>
+              </motion.div>
+              <motion.label
+                className="modal-backdrop"
+                htmlFor="section_modal"
+                onClick={() => setSelectedSection(null)}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
         <h2 className="text-4xl font-extrabold dark:text-white p-8">
           <span className="text-primary">{sharerName}</span> shared a basket
           with you!
@@ -93,12 +121,18 @@ export default function Page({
                 {basketMap.get("BASKET_NAME")}
               </h2>
               {crns.split(",").map((crn: string) => (
-                <div className="card bg-base-300 text-neutral-content w-full">
-                  <div className="card-body">
-                    <h2 className="card-title">{crn}</h2>
-                    <p>{sectionMap.get(crn)}</p>
-                  </div>
-                </div>
+                <motion.label htmlFor="section_modal">
+                  <motion.div
+                    layoutId={crn}
+                    onClick={() => setSelectedSection(crn)}
+                    className="card bg-base-300 text-neutral-content w-full"
+                  >
+                    <motion.div className="card-body">
+                      <motion.h2 className="card-title">{crn}</motion.h2>
+                      <motion.p>{sectionMap.get(crn).section}</motion.p>
+                    </motion.div>
+                  </motion.div>
+                </motion.label>
               ))}
             </div>
           </div>
