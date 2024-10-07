@@ -3,6 +3,7 @@ import useSWR from "swr";
 import { AnimatePresence, motion } from "framer-motion";
 import { notFound } from "next/navigation";
 import { useEffect, useState } from "react";
+import { section, select } from "framer-motion/client";
 
 // Example basket content: MTUANDROID:SEMESTER=SPRING-2024&CRNS=12345,67890&BASKET_NAME=Gabagool&NAME=
 export default function Page({
@@ -31,8 +32,8 @@ export default function Page({
   const fetcher = (url: string | Request | URL) =>
     fetch(url).then((r) => r.json());
 
-  const [sectionMap, setSectionMap] = useState<Map<string, any>>(new Map());
-  const [courseMap, setCourseMap] = useState<Map<string, any>>(new Map());
+  const [sectionMap, setSectionMap] = useState<Map<string, any> | null>(null);
+  const [courseMap, setCourseMap] = useState<Map<string, any> | null>(null);
   const [courseIds, setCourseIds] = useState<string[]>([]);
 
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
@@ -59,16 +60,18 @@ export default function Page({
 
   useEffect(() => {
     if (!data) return;
+    let coolMap = new Map();
     data.sections.forEach((section: any) => {
       setCourseIds((courseIds) => [...courseIds, section.courseId]);
-      setSectionMap(sectionMap.set(section.crn, section));
+      setSectionMap(coolMap.set(section.crn, section));
     });
   }, [data]);
 
   useEffect(() => {
     if (!courseData) return;
+    let coolMap = new Map();
     courseData.courses.forEach((course: any) => {
-      setCourseMap(courseMap.set(course.id, course));
+      setCourseMap(coolMap.set(course.id, course));
     });
   }, [courseData]);
 
@@ -76,13 +79,24 @@ export default function Page({
     return <div>Something went wrong</div>;
   }
 
+  let getCourse = (crn: string) => {
+    return courseMap?.get(sectionMap?.get(crn).courseId);
+  };
+
   var sharerName = "Someone"; //Default sharer name
 
   if (basketMap.get("NAME") != "") {
     sharerName = basketMap.get("NAME");
   }
 
-  if (!isLoading && !courseIsLoading && !error && !courseError) {
+  if (
+    !isLoading &&
+    !courseIsLoading &&
+    !error &&
+    !courseError &&
+    courseMap &&
+    sectionMap
+  ) {
     return (
       <>
         <AnimatePresence>
@@ -93,11 +107,13 @@ export default function Page({
             <motion.div className="modal" role="dialog">
               <motion.div
                 layoutId={selectedSection}
-                className="card bg-base-300 text-neutral-content w-1/2 justify-self-center"
+                className="card bg-base-300 text-neutral-content w-1/2 absolute"
               >
                 <motion.div className="card-body">
                   <motion.h2 className="card-title">
-                    {selectedSection}
+                    {`${getCourse(selectedSection).subject}${
+                      getCourse(selectedSection).crse
+                    } - ${getCourse(selectedSection).title}`}
                   </motion.h2>
                   <motion.p>{sectionMap.get(selectedSection).section}</motion.p>
                 </motion.div>
@@ -128,7 +144,11 @@ export default function Page({
                     className="card bg-base-300 text-neutral-content w-full"
                   >
                     <motion.div className="card-body">
-                      <motion.h2 className="card-title">{crn}</motion.h2>
+                      <motion.h2 className="card-title">
+                        {`${getCourse(crn).subject}${getCourse(crn).crse} - ${
+                          getCourse(crn).title
+                        }`}
+                      </motion.h2>
                       <motion.p>{sectionMap.get(crn).section}</motion.p>
                     </motion.div>
                   </motion.div>
