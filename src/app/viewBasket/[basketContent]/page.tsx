@@ -143,7 +143,7 @@ export default function Page({
               <h2 className="card-title pb-2 font-extrabold">
                 {basketMap.get("BASKET_NAME")}
               </h2>
-              {crns.split(",").map((crn: string) => (
+              {[...new Set<string>(crns.split(","))].map((crn: string) => (
                 <motion.label htmlFor="section_modal">
                   <motion.div
                     layoutId={crn}
