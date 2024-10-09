@@ -3,7 +3,7 @@ import useSWR from "swr";
 import { AnimatePresence, motion } from "framer-motion";
 import { notFound } from "next/navigation";
 import { useEffect, useState } from "react";
-import { section, select } from "framer-motion/client";
+import { s, section, select } from "framer-motion/client";
 
 // Example basket content: MTUANDROID:SEMESTER=SPRING-2024&CRNS=12345,67890&BASKET_NAME=Gabagool&NAME=
 export default function Page({
@@ -89,6 +89,15 @@ export default function Page({
     sharerName = basketMap.get("NAME");
   }
 
+  const [isSafe, setSafe] = useState(true);
+  useEffect(() => {
+    if (selectedSection == null) {
+      setTimeout(() => {
+        setSafe(true);
+      }, 500);
+    }
+  }, [selectedSection]);
+
   if (
     !isLoading &&
     !courseIsLoading &&
@@ -99,12 +108,9 @@ export default function Page({
   ) {
     return (
       <>
-        <AnimatePresence>
-          <input type="checkbox" id="section_modal" className="modal-toggle" />
-        </AnimatePresence>
-        <AnimatePresence>
-          {selectedSection && (
-            <motion.div className="modal" role="dialog">
+        <motion.dialog id="courseDetail" className="modal">
+          <AnimatePresence>
+            {selectedSection && (
               <motion.div
                 layoutId={selectedSection}
                 className="card bg-base-300 text-neutral-content w-1/2 absolute"
@@ -118,14 +124,15 @@ export default function Page({
                   <motion.p>{sectionMap.get(selectedSection).section}</motion.p>
                 </motion.div>
               </motion.div>
-              <motion.label
-                className="modal-backdrop"
-                htmlFor="section_modal"
-                onClick={() => setSelectedSection(null)}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+            )}
+          </AnimatePresence>
+          <motion.form method="dialog" className="modal-backdrop">
+            <motion.button onClick={() => setSelectedSection(null)}>
+              close
+            </motion.button>
+          </motion.form>
+        </motion.dialog>
+
         <h2 className="text-4xl font-extrabold dark:text-white p-8">
           <span className="text-primary">{sharerName}</span> shared a basket
           with you!
@@ -140,7 +147,20 @@ export default function Page({
                 <motion.label htmlFor="section_modal">
                   <motion.div
                     layoutId={crn}
-                    onClick={() => setSelectedSection(crn)}
+                    onClick={() => {
+                      const courseDetailDialog = document.getElementById(
+                        "courseDetail"
+                      ) as HTMLDialogElement;
+                      if (
+                        courseDetailDialog &&
+                        selectedSection == null &&
+                        isSafe
+                      ) {
+                        setSafe(false);
+                        courseDetailDialog.showModal();
+                        setSelectedSection(crn);
+                      }
+                    }}
                     className="card bg-base-300 text-neutral-content w-full"
                   >
                     <motion.div className="card-body">
