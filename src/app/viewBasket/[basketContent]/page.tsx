@@ -168,7 +168,10 @@ export default function Page({
                         <motion.h2 className="card-title">
                           {`${getCourse(crn).subject}${getCourse(crn).crse} - ${
                             getCourse(crn).title
-                          }`}
+                          }`}{" "}
+                          <motion.p className="italic">
+                            ({sectionMap.get(crn).section})
+                          </motion.p>
                         </motion.h2>
                         <motion.p>{sectionMap.get(crn).section}</motion.p>
                       </motion.div>
