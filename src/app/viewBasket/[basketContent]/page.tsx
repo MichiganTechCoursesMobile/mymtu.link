@@ -137,43 +137,45 @@ export default function Page({
           <span className="text-primary">{sharerName}</span> shared a basket
           with you!
         </h2>
-        <div className="px-7">
-          <div className="card bg-base-200 text-neutral-content w-1/2">
-            <div className="card-body">
-              <h2 className="card-title pb-2 font-extrabold">
-                {basketMap.get("BASKET_NAME")}
-              </h2>
-              {[...new Set<string>(crns.split(","))].map((crn: string) => (
-                <motion.label htmlFor="section_modal">
-                  <motion.div
-                    layoutId={crn}
-                    onClick={() => {
-                      const courseDetailDialog = document.getElementById(
-                        "courseDetail"
-                      ) as HTMLDialogElement;
-                      if (
-                        courseDetailDialog &&
-                        selectedSection == null &&
-                        isSafe
-                      ) {
-                        setSafe(false);
-                        courseDetailDialog.showModal();
-                        setSelectedSection(crn);
-                      }
-                    }}
-                    className="card bg-base-300 text-neutral-content w-full"
-                  >
-                    <motion.div className="card-body">
-                      <motion.h2 className="card-title">
-                        {`${getCourse(crn).subject}${getCourse(crn).crse} - ${
-                          getCourse(crn).title
-                        }`}
-                      </motion.h2>
-                      <motion.p>{sectionMap.get(crn).section}</motion.p>
+        <div className="flex flex-row justify-center items-center">
+          <div className="px-7 w-2/3">
+            <div className="card bg-base-200 text-neutral-content">
+              <div className="card-body">
+                <h2 className="card-title pb-2 font-extrabold">
+                  {basketMap.get("BASKET_NAME")}
+                </h2>
+                {[...new Set<string>(crns.split(","))].map((crn: string) => (
+                  <motion.label htmlFor="section_modal">
+                    <motion.div
+                      layoutId={crn}
+                      onClick={() => {
+                        const courseDetailDialog = document.getElementById(
+                          "courseDetail"
+                        ) as HTMLDialogElement;
+                        if (
+                          courseDetailDialog &&
+                          selectedSection == null &&
+                          isSafe
+                        ) {
+                          setSafe(false);
+                          courseDetailDialog.showModal();
+                          setSelectedSection(crn);
+                        }
+                      }}
+                      className="card bg-base-300 text-neutral-content w-full"
+                    >
+                      <motion.div className="card-body">
+                        <motion.h2 className="card-title">
+                          {`${getCourse(crn).subject}${getCourse(crn).crse} - ${
+                            getCourse(crn).title
+                          }`}
+                        </motion.h2>
+                        <motion.p>{sectionMap.get(crn).section}</motion.p>
+                      </motion.div>
                     </motion.div>
-                  </motion.div>
-                </motion.label>
-              ))}
+                  </motion.label>
+                ))}
+              </div>
             </div>
           </div>
         </div>
