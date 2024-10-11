@@ -115,17 +115,6 @@ export default function Page({
     sharerName = basketMap.get("NAME");
   }
 
-  // // Logic for clicking on a section
-  // const [selectedSection, setSelectedSection] = useState<string | null>(null);
-  // const [isSafe, setSafe] = useState(true);
-  // useEffect(() => {
-  //   if (selectedSection == null) {
-  //     setTimeout(() => {
-  //       setSafe(true);
-  //     }, 500);
-  //   }
-  // }, [selectedSection]);
-
   const [clipboardToast, setClipboardToast] = useState(false);
   useEffect(() => {
     if (clipboardToast) {
@@ -136,7 +125,23 @@ export default function Page({
   }, [clipboardToast]);
 
   if (error || buildingError || courseError || instructorError) {
-    return <div>Something went wrong</div>;
+    <div className="h-screen mx-auto grid place-items-center text-center px-8">
+      <div>
+        <svg
+          viewBox="0 0 1024 1024"
+          fill="currentColor"
+          height="1em"
+          width="1em"
+          className="w-20 h-20 mx-auto fill-error"
+        >
+          <path d="M880 305H624V192c0-17.7-14.3-32-32-32H184v-40c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v784c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8V640h248v113c0 17.7 14.3 32 32 32h416c17.7 0 32-14.3 32-32V337c0-17.7-14.3-32-32-32z" />
+        </svg>
+        <h1 className="mt-10 !text-3xl !leading-snug md:!text-4xl">Uh oh!</h1>
+        <p className="mt-2 text-error !text-2xl !leading-snug md:!text-2xl">
+          Something went wrong!
+        </p>
+      </div>
+    </div>;
   }
 
   if (
@@ -154,32 +159,6 @@ export default function Page({
   ) {
     return (
       <>
-        {/* For Another time */}
-        {/* <motion.dialog id="courseDetail" className="modal">
-          <AnimatePresence>
-            {selectedSection && (
-              <motion.div
-                layoutId={selectedSection}
-                className="card bg-base-300 text-neutral-content w-1/2 absolute"
-              >
-                <div className="card-body">
-                  <h2 className="card-title">
-                    {`${getCourse(selectedSection).subject}${
-                      getCourse(selectedSection).crse
-                    } - ${getCourse(selectedSection).title}`}
-                  </h2>
-                  <p>{sectionMap.get(selectedSection).section}</p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-          <motion.form method="dialog" className="modal-backdrop">
-            <motion.button onClick={() => setSelectedSection(null)}>
-              close
-            </motion.button>
-          </motion.form>
-        </motion.dialog> */}
-
         <div className="flex flex-col gap-4 pb-8 justify-center items-center">
           <div className="px-7 w-full md:w-2/3">
             <h2 className="text-4xl font-extrabold dark:text-white py-8">
@@ -198,26 +177,38 @@ export default function Page({
                 </div>
                 {[...new Set<string>(crns.split(","))].map((crn: string) => {
                   const course = getCourse(crn);
-                  if (!course) return null;
+                  const section = sectionMap.get(crn);
+                  if (!course || !section) return null;
                   const instructor = instructorMap?.get(
-                    sectionMap.get(crn).instructors[0]?.id.toString()
+                    section.instructors[0]?.id.toString()
                   );
+                  var time: string = "";
+                  if (section.time.rrules.length > 0) {
+                    section.time.rrules[0].config.byDayOfWeek.forEach(
+                      (day: string) => {
+                        if (day == "TH") day = "R";
+                        time += day.substring(0, 1);
+                      }
+                    );
+                    const formatTime = (hour: number, minute: number) => {
+                      const period = hour >= 12 ? "pm" : "am";
+                      const formattedHour = hour > 12 ? hour - 12 : hour;
+                      const formattedMinute = minute === 0 ? "00" : minute;
+                      return `${formattedHour}:${formattedMinute}${period}`;
+                    };
+
+                    const startTime = section.time.rrules[0].config.start;
+                    const endTime = section.time.rrules[0].config.end;
+
+                    time += " | ";
+                    time += formatTime(startTime.hour, startTime.minute);
+                    time += " - ";
+                    time += formatTime(endTime.hour, endTime.minute);
+                  }
+
+                  const instructorSize = section.instructors.length;
                   return (
                     <div
-                      // onClick={() => {
-                      //   const courseDetailDialog = document.getElementById(
-                      //     "courseDetail"
-                      //   ) as HTMLDialogElement;
-                      //   if (
-                      //     courseDetailDialog &&
-                      //     selectedSection == null &&
-                      //     isSafe
-                      //   ) {
-                      //     setSafe(false);
-                      //     courseDetailDialog.showModal();
-                      //     setSelectedSection(crn);
-                      //   }
-                      // }}
                       className="card bg-base-300 text-neutral-content w-full"
                       key={crn}
                     >
@@ -226,9 +217,7 @@ export default function Page({
                           <h2 className="flex-1">
                             {`${course.subject}${course.crse} - ${course.title}`}{" "}
                           </h2>
-                          <h4 className="italic">
-                            ({sectionMap.get(crn).section})
-                          </h4>
+                          <h4 className="italic">({section.section})</h4>
                         </div>
                         <div className="flex flex-col space-y-2">
                           <div className="flex flex-row space-x-1.5 items-center">
@@ -258,27 +247,48 @@ export default function Page({
                             )}
 
                             <div>
-                              {instructor ? instructor.fullName : "¯\\_(ツ)_/¯"}
+                              {instructor ? instructor.fullName : "¯\\_(ツ)_/¯"}{" "}
+                              {instructorSize > 1 ? (
+                                <div className="badge badge-primary">
+                                  +{instructorSize - 1}
+                                </div>
+                              ) : (
+                                ""
+                              )}
                             </div>
                           </div>
 
                           <div className="flex flex-row flex-wrap gap-2">
                             <div
                               className={`p-4 badge ${
-                                sectionMap.get(crn).availableSeats <= 0
+                                section.availableSeats <= 0
                                   ? "badge-error"
                                   : "badge-primary"
                               }`}
                             >
-                              {sectionMap.get(crn).availableSeats}/
-                              {sectionMap.get(crn).totalSeats}
+                              {section.availableSeats}/{section.totalSeats}
                             </div>
                             <div className="p-4 badge">
-                              {buildingMap.get(sectionMap.get(crn).buildingName)
+                              {buildingMap.get(section.buildingName)
                                 ?.shortName ?? "¯\\_(ツ)_/¯"}{" "}
-                              {sectionMap.get(crn).room ?? ""}
+                              {section.room ?? ""}
                             </div>
                             <div className="p-4 badge">CRN: {crn}</div>
+                            <div className="p-4 badge badge-primary flex flex-row gap-2">
+                              <svg
+                                viewBox="0 0 1024 1024"
+                                fill="currentColor"
+                                height="1.5em"
+                                width="1.5em"
+                              >
+                                <defs>
+                                  <style />
+                                </defs>
+                                <path d="M945 412H689c-4.4 0-8 3.6-8 8v48c0 4.4 3.6 8 8 8h256c4.4 0 8-3.6 8-8v-48c0-4.4-3.6-8-8-8zM811 548H689c-4.4 0-8 3.6-8 8v48c0 4.4 3.6 8 8 8h122c4.4 0 8-3.6 8-8v-48c0-4.4-3.6-8-8-8zM477.3 322.5H434c-6.2 0-11.2 5-11.2 11.2v248c0 3.6 1.7 6.9 4.6 9l148.9 108.6c5 3.6 12 2.6 15.6-2.4l25.7-35.1v-.1c3.6-5 2.5-12-2.5-15.6l-126.7-91.6V333.7c.1-6.2-5-11.2-11.1-11.2z" />
+                                <path d="M804.8 673.9H747c-5.6 0-10.9 2.9-13.9 7.7-12.7 20.1-27.5 38.7-44.5 55.7-29.3 29.3-63.4 52.3-101.3 68.3-39.3 16.6-81 25-124 25-43.1 0-84.8-8.4-124-25-37.9-16-72-39-101.3-68.3s-52.3-63.4-68.3-101.3c-16.6-39.2-25-80.9-25-124 0-43.1 8.4-84.7 25-124 16-37.9 39-72 68.3-101.3 29.3-29.3 63.4-52.3 101.3-68.3 39.2-16.6 81-25 124-25 43.1 0 84.8 8.4 124 25 37.9 16 72 39 101.3 68.3 17 17 31.8 35.6 44.5 55.7 3 4.8 8.3 7.7 13.9 7.7h57.8c6.9 0 11.3-7.2 8.2-13.3-65.2-129.7-197.4-214-345-215.7-216.1-2.7-395.6 174.2-396 390.1C71.6 727.5 246.9 903 463.2 903c149.5 0 283.9-84.6 349.8-215.8 3.1-6.1-1.4-13.3-8.2-13.3z" />
+                              </svg>
+                              {time ? time : "¯\\_(ツ)_/¯"}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -332,6 +342,10 @@ export default function Page({
       </>
     );
   } else {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex flex-row min-h-screen justify-center items-center">
+        <span className="loading loading-spinner loading-lg "></span>
+      </div>
+    );
   }
 }
