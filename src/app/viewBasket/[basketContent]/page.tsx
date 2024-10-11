@@ -34,6 +34,7 @@ export default function Page({
 
   const [sectionMap, setSectionMap] = useState<Map<string, any> | null>(null);
   const [courseMap, setCourseMap] = useState<Map<string, any> | null>(null);
+  const [buildingMap, setBuildingMap] = useState<Map<string, any> | null>(null);
   const [courseIds, setCourseIds] = useState<string[]>([]);
 
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
@@ -46,6 +47,12 @@ export default function Page({
     `/api/getSections?semester=${semester}&year=${semesterYear}&sections=${crns}`,
     fetcher
   );
+
+  const {
+    data: buildingData,
+    error: buildingError,
+    isLoading: buildingIsLoading,
+  } = useSWR("https://api.michigantechcourses.com/buildings", fetcher);
 
   const {
     data: courseData,
@@ -75,9 +82,13 @@ export default function Page({
     });
   }, [courseData]);
 
-  if (error) {
-    return <div>Something went wrong</div>;
-  }
+  useEffect(() => {
+    if (!buildingData) return;
+    let coolMap = new Map();
+    buildingData.forEach((building: any) => {
+      setBuildingMap(coolMap.set(building.name, building));
+    });
+  }, [buildingData]);
 
   let getCourse = (crn: string) => {
     return courseMap?.get(sectionMap?.get(crn).courseId);
@@ -98,11 +109,18 @@ export default function Page({
     }
   }, [selectedSection]);
 
+  if (error || buildingError || courseError) {
+    return <div>Something went wrong</div>;
+  }
+
   if (
     !isLoading &&
     !courseIsLoading &&
     !error &&
     !courseError &&
+    !buildingIsLoading &&
+    !buildingError &&
+    buildingMap &&
     courseMap &&
     sectionMap
   ) {
@@ -115,14 +133,14 @@ export default function Page({
                 layoutId={selectedSection}
                 className="card bg-base-300 text-neutral-content w-1/2 absolute"
               >
-                <motion.div className="card-body">
-                  <motion.h2 className="card-title">
+                <div className="card-body">
+                  <h2 className="card-title">
                     {`${getCourse(selectedSection).subject}${
                       getCourse(selectedSection).crse
                     } - ${getCourse(selectedSection).title}`}
-                  </motion.h2>
-                  <motion.p>{sectionMap.get(selectedSection).section}</motion.p>
-                </motion.div>
+                  </h2>
+                  <p>{sectionMap.get(selectedSection).section}</p>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -138,9 +156,9 @@ export default function Page({
           with you!
         </h2>
         <div className="flex flex-row justify-center items-center">
-          <div className="px-7 w-2/3">
+          <div className="px-7 w-full md:w-2/3">
             <div className="card bg-base-200 text-neutral-content">
-              <div className="card-body">
+              <div className="card-body flex flex-col">
                 <h2 className="card-title pb-2 font-extrabold">
                   {basketMap.get("BASKET_NAME")}
                 </h2>
@@ -164,17 +182,40 @@ export default function Page({
                       }}
                       className="card bg-base-300 text-neutral-content w-full"
                     >
-                      <motion.div className="card-body">
-                        <motion.h2 className="card-title">
+                      <div className="card-body">
+                        <h2 className="card-title">
                           {`${getCourse(crn).subject}${getCourse(crn).crse} - ${
                             getCourse(crn).title
                           }`}{" "}
-                          <motion.p className="italic">
+                          <p className="italic">
                             ({sectionMap.get(crn).section})
-                          </motion.p>
-                        </motion.h2>
-                        <motion.p>{sectionMap.get(crn).section}</motion.p>
-                      </motion.div>
+                          </p>
+                        </h2>
+                        <div className="flex flex-col space-y-2">
+                          <div>{sectionMap.get(crn).instructors[0].id}</div>
+                          <div className="flex flex-row space-x-2">
+                            <div
+                              className={`badge ${
+                                sectionMap.get(crn).availableSeats <= 0
+                                  ? "badge-error"
+                                  : "badge-primary"
+                              }`}
+                            >
+                              {sectionMap.get(crn).availableSeats}/
+                              {sectionMap.get(crn).totalSeats}
+                            </div>
+                            <div className="badge">
+                              {
+                                buildingMap.get(
+                                  sectionMap.get(crn).buildingName
+                                ).shortName
+                              }{" "}
+                              {sectionMap.get(crn).room}
+                            </div>
+                            <div className="badge">CRN: {crn}</div>
+                          </div>
+                        </div>
+                      </div>
                     </motion.div>
                   </motion.label>
                 ))}
