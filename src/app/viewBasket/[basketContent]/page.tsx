@@ -35,9 +35,10 @@ export default function Page({
   const [sectionMap, setSectionMap] = useState<Map<string, any> | null>(null);
   const [courseMap, setCourseMap] = useState<Map<string, any> | null>(null);
   const [buildingMap, setBuildingMap] = useState<Map<string, any> | null>(null);
+  const [instructorMap, setInstructorMap] = useState<Map<string, any> | null>(
+    null
+  );
   const [courseIds, setCourseIds] = useState<string[]>([]);
-
-  const [selectedSection, setSelectedSection] = useState<string | null>(null);
 
   const semester = basketMap.get("SEMESTER").split("-")[0];
   const semesterYear = basketMap.get("SEMESTER").split("-")[1];
@@ -65,6 +66,12 @@ export default function Page({
     fetcher
   );
 
+  const {
+    data: instructorData,
+    error: instructorError,
+    isLoading: instructorIsLoading,
+  } = useSWR("/api/getInstructors", fetcher);
+
   useEffect(() => {
     if (!data) return;
     let coolMap = new Map();
@@ -90,6 +97,14 @@ export default function Page({
     });
   }, [buildingData]);
 
+  useEffect(() => {
+    if (!instructorData) return;
+    let coolMap = new Map();
+    instructorData.instructors.forEach((instructor: any) => {
+      setInstructorMap(coolMap.set(instructor.id.toString(), instructor));
+    });
+  }, [instructorData]);
+
   let getCourse = (crn: string) => {
     return courseMap?.get(sectionMap?.get(crn).courseId);
   };
@@ -100,16 +115,18 @@ export default function Page({
     sharerName = basketMap.get("NAME");
   }
 
-  const [isSafe, setSafe] = useState(true);
-  useEffect(() => {
-    if (selectedSection == null) {
-      setTimeout(() => {
-        setSafe(true);
-      }, 500);
-    }
-  }, [selectedSection]);
+  // // Logic for clicking on a section
+  // const [selectedSection, setSelectedSection] = useState<string | null>(null);
+  // const [isSafe, setSafe] = useState(true);
+  // useEffect(() => {
+  //   if (selectedSection == null) {
+  //     setTimeout(() => {
+  //       setSafe(true);
+  //     }, 500);
+  //   }
+  // }, [selectedSection]);
 
-  if (error || buildingError || courseError) {
+  if (error || buildingError || courseError || instructorError) {
     return <div>Something went wrong</div>;
   }
 
@@ -120,13 +137,16 @@ export default function Page({
     !courseError &&
     !buildingIsLoading &&
     !buildingError &&
+    !instructorError &&
     buildingMap &&
     courseMap &&
-    sectionMap
+    sectionMap &&
+    instructorMap
   ) {
     return (
       <>
-        <motion.dialog id="courseDetail" className="modal">
+        {/* For Another time */}
+        {/* <motion.dialog id="courseDetail" className="modal">
           <AnimatePresence>
             {selectedSection && (
               <motion.div
@@ -149,7 +169,7 @@ export default function Page({
               close
             </motion.button>
           </motion.form>
-        </motion.dialog>
+        </motion.dialog> */}
 
         <h2 className="text-4xl font-extrabold dark:text-white p-8">
           <span className="text-primary">{sharerName}</span> shared a basket
@@ -163,61 +183,78 @@ export default function Page({
                   {basketMap.get("BASKET_NAME")}
                 </h2>
                 {[...new Set<string>(crns.split(","))].map((crn: string) => (
-                  <motion.label htmlFor="section_modal">
-                    <motion.div
-                      layoutId={crn}
-                      onClick={() => {
-                        const courseDetailDialog = document.getElementById(
-                          "courseDetail"
-                        ) as HTMLDialogElement;
-                        if (
-                          courseDetailDialog &&
-                          selectedSection == null &&
-                          isSafe
-                        ) {
-                          setSafe(false);
-                          courseDetailDialog.showModal();
-                          setSelectedSection(crn);
-                        }
-                      }}
-                      className="card bg-base-300 text-neutral-content w-full"
-                    >
-                      <div className="card-body">
-                        <h2 className="card-title">
-                          {`${getCourse(crn).subject}${getCourse(crn).crse} - ${
-                            getCourse(crn).title
-                          }`}{" "}
-                          <p className="italic">
-                            ({sectionMap.get(crn).section})
-                          </p>
-                        </h2>
-                        <div className="flex flex-col space-y-2">
-                          <div>{sectionMap.get(crn).instructors[0].id}</div>
-                          <div className="flex flex-row space-x-2">
-                            <div
-                              className={`badge ${
-                                sectionMap.get(crn).availableSeats <= 0
-                                  ? "badge-error"
-                                  : "badge-primary"
-                              }`}
-                            >
-                              {sectionMap.get(crn).availableSeats}/
-                              {sectionMap.get(crn).totalSeats}
+                  <div
+                    // onClick={() => {
+                    //   const courseDetailDialog = document.getElementById(
+                    //     "courseDetail"
+                    //   ) as HTMLDialogElement;
+                    //   if (
+                    //     courseDetailDialog &&
+                    //     selectedSection == null &&
+                    //     isSafe
+                    //   ) {
+                    //     setSafe(false);
+                    //     courseDetailDialog.showModal();
+                    //     setSelectedSection(crn);
+                    //   }
+                    // }}
+                    className="card bg-base-300 text-neutral-content w-full"
+                  >
+                    <div className="card-body">
+                      <h2 className="card-title">
+                        {`${getCourse(crn).subject}${getCourse(crn).crse} - ${
+                          getCourse(crn).title
+                        }`}{" "}
+                        <p className="italic">
+                          ({sectionMap.get(crn).section})
+                        </p>
+                      </h2>
+                      <div className="flex flex-col space-y-2">
+                        <div className="flex flex-row space-x-2 items-center">
+                          <div className="avatar">
+                            <div className="w-8 rounded-full">
+                              <img
+                                src={
+                                  instructorMap.get(
+                                    sectionMap
+                                      .get(crn)
+                                      .instructors[0].id.toString()
+                                  ).thumbnailURL
+                                }
+                              />
                             </div>
-                            <div className="badge">
-                              {
-                                buildingMap.get(
-                                  sectionMap.get(crn).buildingName
-                                ).shortName
-                              }{" "}
-                              {sectionMap.get(crn).room}
-                            </div>
-                            <div className="badge">CRN: {crn}</div>
+                          </div>
+                          <div>
+                            {
+                              instructorMap.get(
+                                sectionMap.get(crn).instructors[0].id.toString()
+                              ).fullName
+                            }
                           </div>
                         </div>
+                        <div className="flex flex-row space-x-2">
+                          <div
+                            className={`badge ${
+                              sectionMap.get(crn).availableSeats <= 0
+                                ? "badge-error"
+                                : "badge-primary"
+                            }`}
+                          >
+                            {sectionMap.get(crn).availableSeats}/
+                            {sectionMap.get(crn).totalSeats}
+                          </div>
+                          <div className="badge">
+                            {
+                              buildingMap.get(sectionMap.get(crn).buildingName)
+                                .shortName
+                            }{" "}
+                            {sectionMap.get(crn).room}
+                          </div>
+                          <div className="badge">CRN: {crn}</div>
+                        </div>
                       </div>
-                    </motion.div>
-                  </motion.label>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
