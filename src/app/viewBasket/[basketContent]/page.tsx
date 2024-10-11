@@ -171,12 +171,12 @@ export default function Page({
           </motion.form>
         </motion.dialog> */}
 
-        <h2 className="text-4xl font-extrabold dark:text-white p-8">
-          <span className="text-primary">{sharerName}</span> shared a basket
-          with you!
-        </h2>
         <div className="flex flex-row justify-center items-center">
           <div className="px-7 w-full md:w-2/3">
+            <h2 className="text-4xl font-extrabold dark:text-white py-8">
+              <span className="text-primary">{sharerName}</span> shared a basket
+              with you!
+            </h2>
             <div className="card bg-base-200 text-neutral-content">
               <div className="card-body flex flex-col">
                 <h2 className="card-title pb-2 font-extrabold">
