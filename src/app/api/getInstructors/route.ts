@@ -1,7 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   const instructorURL = `https://api.michigantechcourses.com/instructors`;
   const getInstructorData = unstable_cache(
     async () => (await fetch(instructorURL)).json(),

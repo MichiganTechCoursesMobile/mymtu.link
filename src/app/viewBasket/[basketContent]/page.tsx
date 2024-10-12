@@ -3,14 +3,21 @@ import useSWR from "swr";
 import { AnimatePresence, motion } from "framer-motion";
 import { notFound } from "next/navigation";
 import { useEffect, useState } from "react";
-import { s, section, select } from "framer-motion/client";
+import Image from "next/image";
 // Example basket content: MTUANDROID:SEMESTER=SPRING-2024&CRNS=12345,67890&BASKET_NAME=Gabagool&NAME=
 export default function Page({
   params,
 }: {
   params: { basketContent: string };
 }) {
-  let basketMap = new Map();
+  const basketMap = new Map();
+  const [sectionMap, setSectionMap] = useState<Map<string, any> | null>(null);
+  const [courseMap, setCourseMap] = useState<Map<string, any> | null>(null);
+  const [buildingMap, setBuildingMap] = useState<Map<string, any> | null>(null);
+  const [instructorMap, setInstructorMap] = useState<Map<string, any> | null>(
+    null
+  );
+  const [courseIds, setCourseIds] = useState<string[]>([]);
   let request = decodeURIComponent(params?.basketContent);
   // If the request does not start with MTUANDROID:, assume its base64 encoded, and decode it.
   if (!request.startsWith("MTUANDROID:")) {
@@ -30,14 +37,6 @@ export default function Page({
 
   const fetcher = (url: string | Request | URL) =>
     fetch(url).then((r) => r.json());
-
-  const [sectionMap, setSectionMap] = useState<Map<string, any> | null>(null);
-  const [courseMap, setCourseMap] = useState<Map<string, any> | null>(null);
-  const [buildingMap, setBuildingMap] = useState<Map<string, any> | null>(null);
-  const [instructorMap, setInstructorMap] = useState<Map<string, any> | null>(
-    null
-  );
-  const [courseIds, setCourseIds] = useState<string[]>([]);
 
   const semester = basketMap.get("SEMESTER").split("-")[0];
   const semesterYear = basketMap.get("SEMESTER").split("-")[1];
@@ -73,7 +72,7 @@ export default function Page({
 
   useEffect(() => {
     if (!data) return;
-    let coolMap = new Map();
+    const coolMap = new Map();
     data.sections.forEach((section: any) => {
       setCourseIds((courseIds) => [...courseIds, section.courseId]);
       setSectionMap(coolMap.set(section.crn, section));
@@ -82,7 +81,7 @@ export default function Page({
 
   useEffect(() => {
     if (!courseData) return;
-    let coolMap = new Map();
+    const coolMap = new Map();
     courseData.courses.forEach((course: any) => {
       setCourseMap(coolMap.set(course.id, course));
     });
@@ -90,7 +89,7 @@ export default function Page({
 
   useEffect(() => {
     if (!buildingData) return;
-    let coolMap = new Map();
+    const coolMap = new Map();
     buildingData.forEach((building: any) => {
       setBuildingMap(coolMap.set(building.name, building));
     });
@@ -98,18 +97,17 @@ export default function Page({
 
   useEffect(() => {
     if (!instructorData) return;
-    let coolMap = new Map();
+    const coolMap = new Map();
     instructorData.instructors.forEach((instructor: any) => {
       setInstructorMap(coolMap.set(instructor.id.toString(), instructor));
     });
   }, [instructorData]);
 
-  let getCourse = (crn: string) => {
+  const getCourse = (crn: string) => {
     if (sectionMap?.get(crn) == null) return null;
     return courseMap?.get(sectionMap?.get(crn).courseId);
   };
-
-  var sharerName = "Someone"; //Default sharer name
+  let sharerName = "Someone"; //Default sharer name
 
   if (basketMap.get("NAME") != "") {
     sharerName = basketMap.get("NAME");
@@ -152,6 +150,7 @@ export default function Page({
     !buildingIsLoading &&
     !buildingError &&
     !instructorError &&
+    !instructorIsLoading &&
     buildingMap &&
     courseMap &&
     sectionMap &&
@@ -182,7 +181,7 @@ export default function Page({
                   const instructor = instructorMap?.get(
                     section.instructors[0]?.id.toString()
                   );
-                  var time: string = "";
+                  let time: string = "";
                   if (section.time.rrules.length > 0) {
                     section.time.rrules[0].config.byDayOfWeek.forEach(
                       (day: string) => {
@@ -231,7 +230,10 @@ export default function Page({
                                   className={`w-10 rounded-full bg-base-200`}
                                 >
                                   {instructor?.thumbnailURL ? (
-                                    <img src={instructor.thumbnailURL} />
+                                    <Image
+                                      src={instructor.thumbnailURL}
+                                      alt={"Professor Thumbnail"}
+                                    />
                                   ) : (
                                     <span className="text-sm">
                                       {instructor.fullName.split(" ")[0][0]}
