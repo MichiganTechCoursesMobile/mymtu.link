@@ -3,7 +3,6 @@ import useSWR from "swr";
 import { AnimatePresence, motion } from "framer-motion";
 import { notFound } from "next/navigation";
 import { useEffect, useState } from "react";
-import Image from "next/image";
 // Example basket content: MTUANDROID:SEMESTER=SPRING-2024&CRNS=12345,67890&BASKET_NAME=Gabagool&NAME=
 export default function Page({
   params,
@@ -230,7 +229,7 @@ export default function Page({
                                   className={`w-10 rounded-full bg-base-200`}
                                 >
                                   {instructor?.thumbnailURL ? (
-                                    <Image
+                                    <img
                                       src={instructor.thumbnailURL}
                                       alt={"Professor Thumbnail"}
                                     />
