@@ -1,0 +1,11 @@
+[
+    {
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.mtucoursesmobile.michigantechcourses",
+        "sha256_cert_fingerprints":
+          ["23:27:82:80:A6:5E:5D:33:C3:6B:AF:B4:2E:F8:8A:DA:79:9D:0C:98:23:0F:C1:FA:3B:1E:8F:6B:CF:82:90:79"]
+      }
+    }
+  ]
